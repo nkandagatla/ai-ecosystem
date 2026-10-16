@@ -1,0 +1,1 @@
+{"description":"Testing / QA focus","agents":["planner","tester","developer","reviewer","docs"],"skills":["test-strategy","code-review-checklist","documentation-standards"],"workflows":["test-campaign","bugfix"],"external_skills":["code-fundamentals","git-workflow","engineering-guardrails"]}
