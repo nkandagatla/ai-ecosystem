@@ -4,7 +4,8 @@ import argparse, json, os, re, shutil, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-IDES = ["cursor", "claude", "copilot", "windsurf"]
+IDES = ["claude", "codex", "cursor", "copilot", "windsurf"]
+ALIASES = {"github": "copilot", ".claude": "claude", ".codex": "codex", ".cursor": "cursor", ".github": "copilot", ".windsurf": "windsurf"}
 BEGIN, END = "<!-- ai-ecosystem:begin -->", "<!-- ai-ecosystem:end -->"
 MANIFEST = ".ai-ecosystem.json"
 
@@ -135,7 +136,7 @@ def skill_refs(m, where):
     return ("\n\n## Skills to load\n" + "\n".join(f"- {x}" for x in s) + "\n") if s else ""
 
 
-def to_claude(o, prof, agents, skills, wfs, ext):
+def to_claude(o, prof, agents, skills, wfs, ext, user=False):
     for n, (m, b) in agents.items():
         o.write(f".claude/agents/{n}.md", fm(name=n, description=q(m["description"])) + b + skill_refs(m, ""))
     for n in skills:
@@ -144,7 +145,10 @@ def to_claude(o, prof, agents, skills, wfs, ext):
         o.copytree(f".claude/skills/{n}", d)
     for n, (m, b) in wfs.items():
         o.write(f".claude/commands/{n}.md", fm(description=q(m["description"]), **{"argument-hint": q("[input]")}) + b)
-    o.block("CLAUDE.md", "@AGENTS.md")
+    if user:
+        o.block(".claude/CLAUDE.md", index_text(prof, agents, skills, wfs, ext))
+    else:
+        o.block("CLAUDE.md", "@AGENTS.md")
 
 
 def to_copilot(o, prof, agents, skills, wfs, ext):
@@ -173,55 +177,193 @@ def to_windsurf(o, prof, agents, skills, wfs, ext):
     o.write(".windsurf/rules/ai-ecosystem.md", fm(trigger="always_on") + index_text(prof, agents, skills, wfs, ext))
 
 
-def uninstall(target):
-    mp = target / MANIFEST
+def to_codex(o, prof, agents, skills, wfs, ext, user=False):
+    """Codex reads AGENTS.md (project) / ~/.codex/AGENTS.md (user); skills and prompts live under .codex."""
+    base = "" if user else ".codex/"
+    for n, (m, b) in skills.items():
+        o.write(f"{base}skills/{n}/SKILL.md" if user else f".codex/skills/{n}/SKILL.md", fm(name=n, description=q(m["description"])) + b)
+    for n, d in ext.items():
+        o.copytree(f"{base}skills/{n}" if user else f".codex/skills/{n}", d)
+    for n, (m, b) in agents.items():
+        o.write(f"{base}agents/{n}.md", fm(name=n, description=q(m["description"])) + b + skill_refs(m, ""))
+    for n, (m, b) in wfs.items():
+        o.write(f"{base}prompts/{n}.md", fm(description=q(m["description"])) + b)
+    if user:
+        o.block("AGENTS.md", index_text(prof, agents, skills, wfs, ext))
+
+
+def to_user(ide, o, prof, agents, skills, wfs, ext):
+    """User/global scope: o.target is the home directory."""
+    if ide == "claude":
+        to_claude(o, prof, agents, skills, wfs, ext, user=True)  # ~/.claude/*
+    elif ide == "codex":
+        # rooted at ~/.codex
+        sub = Out(o.target / ".codex", o.dry)
+        to_codex(sub, prof, agents, skills, wfs, ext, user=True)
+        o.files += [".codex/" + f for f in sub.files]
+    elif ide == "cursor":
+        for n, (m, b) in agents.items():
+            o.write(f".cursor/agents/{n}.md", fm(name=n, description=q(m["description"])) + b + skill_refs(m, ""))
+        for n in skills:
+            o.copytree(f".cursor/skills/{n}", ROOT / "core/skills" / n)
+        for n, d in ext.items():
+            o.copytree(f".cursor/skills/{n}", d)
+        for n, (m, b) in wfs.items():
+            o.write(f".cursor/commands/{n}.md", b)
+    elif ide == "windsurf":
+        w = ".codeium/windsurf"
+        o.block(f"{w}/memories/global_rules.md", index_text(prof, agents, skills, wfs, ext))
+        for n, (m, b) in wfs.items():
+            o.write(f"{w}/global_workflows/{n}.md", fm(description=q(m["description"])) + b)
+        for n, (m, b) in agents.items():
+            o.write(f"{w}/global_workflows/agent-{n}.md", fm(description=q("Role: " + m["description"])) + b)
+    elif ide == "copilot":
+        print("  note: Copilot has no stable file-based user scope; use --scope project for .github (skipped)", file=sys.stderr)
+
+
+def manifest_path(scope, target, home):
+    return (home if scope == "user" else target) / MANIFEST
+
+
+def uninstall(root, mp):
     if not mp.exists():
         sys.exit("no manifest found; nothing to uninstall")
     for rel in json.loads(mp.read_text())["files"]:
         if rel.endswith("#block"):
-            p = target / rel[:-6]
+            p = root / rel[:-6]
             if p.exists():
                 t = re.sub(re.escape(BEGIN) + ".*?" + re.escape(END) + r"\n?", "", p.read_text(), flags=re.S).strip()
                 p.unlink() if not t else p.write_text(t + "\n")
         else:
-            (target / rel).unlink(missing_ok=True)
+            (root / rel).unlink(missing_ok=True)
     mp.unlink()
-    for d in sorted((p for p in target.rglob("*") if p.is_dir()), key=lambda x: -len(x.parts)):
-        if not any(d.iterdir()):
-            d.rmdir()
+    for d in sorted((p for p in root.rglob("*") if p.is_dir() and ".git" not in p.parts and not str(p).startswith(str(ROOT))), key=lambda x: -len(x.parts)):
+        try:
+            if not any(d.iterdir()):
+                d.rmdir()
+        except OSError:
+            pass
     print("uninstalled")
 
 
+def ask_multi(title, options, default):
+    print(f"\n{title}")
+    for i, o_ in enumerate(options, 1):
+        print(f"  {i}) {o_}")
+    r = input(f"Select (comma numbers, 'a' = all) [{default}]: ").strip() or default
+    if r.lower() == "a":
+        return list(options)
+    return [options[int(x) - 1] for x in re.split(r"[ ,]+", r) if x]
+
+
+def ask_one(title, options, default):
+    print(f"\n{title}")
+    for i, o_ in enumerate(options, 1):
+        print(f"  {i}) {o_}")
+    r = input(f"Select [{default}]: ").strip() or default
+    return options[int(r) - 1]
+
+
+def csv(v):
+    return [x.strip() for x in v.split(",") if x.strip()] if v else None
+
+
 def main():
-    ap = argparse.ArgumentParser(description="Install the AI ecosystem into a project")
-    ap.add_argument("--ide", default="all", help="comma list of: " + ",".join(IDES) + " or all")
-    ap.add_argument("--profile", default="general")
-    ap.add_argument("--target", default=".", help="project directory (default: cwd)")
+    ap = argparse.ArgumentParser(description="Install the AI ecosystem (interactive unless flags + --yes are given)")
+    ap.add_argument("--target", "--targets", "--ide", dest="targets", help="comma list: claude,codex,cursor,copilot(.github),windsurf or all")
+    ap.add_argument("--scope", choices=["project", "user"], help="project = repo-level; user = global (~/.claude, ~/.codex, ~/.cursor, ...)")
+    ap.add_argument("--profile", help="general|web-app|testing|infrastructure-as-code (alias: iac)")
+    ap.add_argument("--agents", help="comma list overriding the profile's agents")
+    ap.add_argument("--skills", help="comma list overriding the profile's skills (core + external)")
+    ap.add_argument("--dir", default=".", help="project directory for --scope project (default: cwd)")
+    ap.add_argument("--home", default=str(Path.home()), help="home directory for --scope user (default: $HOME)")
+    ap.add_argument("--yes", "-y", action="store_true", help="non-interactive; accept defaults for anything not given")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--uninstall", action="store_true")
+    ap.add_argument("--update", action="store_true", help="re-render using the profile/targets recorded in the manifest")
     ap.add_argument("--sync", action="store_true", help="(install.sh) sync ai-cloud-skills first")
-    ap.add_argument("--list", action="store_true", help="list profiles/agents/workflows")
+    ap.add_argument("--list", action="store_true")
     args = ap.parse_args()
-    target = Path(args.target).resolve()
+    interactive = sys.stdin.isatty() and not args.yes
+    profiles = sorted(p.stem for p in (ROOT / "profiles").glob("*.json"))
     if args.list:
-        for p in sorted((ROOT / "profiles").glob("*.json")):
-            print(f"{p.stem}: {json.loads(p.read_text())['description']}")
+        for n in profiles:
+            print(f"{n}: {load_profile(n)['description']}")
         return
+
+    scope = args.scope or (ask_one("Install scope:", ["project", "user"], "1") if interactive else "project")
+    root = Path(args.home if scope == "user" else args.dir).expanduser().resolve()
+    mp = manifest_path(scope, root, root)
     if args.uninstall:
-        return uninstall(target)
-    ides = IDES if args.ide == "all" else [x.strip() for x in args.ide.split(",")]
+        return uninstall(root, mp)
+    if args.update:
+        if not mp.exists():
+            sys.exit("nothing to update (no manifest); run install first")
+        m = json.loads(mp.read_text())
+        args.targets, args.profile = ",".join(m["ides"]), m["profile"]
+        args.agents = args.agents or (",".join(m["agents"]) if m.get("custom") else None)
+        args.skills = args.skills or (",".join(m["skills"]) if m.get("custom") else None)
+        uninstall(root, mp)
+
+    t = args.targets
+    if not t:
+        t = ",".join(ask_multi("Target tools:", IDES, "a")) if interactive else "all"
+    ides = IDES if t == "all" else [ALIASES.get(x, x) for x in csv(t)]
     bad = [i for i in ides if i not in IDES]
     if bad:
-        sys.exit(f"unknown ide: {bad}; choose from {IDES}")
-    prof, agents, skills, wfs, ext = build(args)
-    target.mkdir(parents=True, exist_ok=True)
-    o = Out(target, args.dry_run)
-    o.block("AGENTS.md", index_text(prof, agents, skills, wfs, ext))
+        sys.exit(f"unknown target: {bad}; choose from {IDES}")
+    pname = args.profile or (ask_one("Profile:", profiles, "1") if interactive else "general")
+    pname = {"iac": "infrastructure-as-code"}.get(pname, pname)
+    prof = load_profile(pname)
+    avail_agents = sorted(p.stem for p in (ROOT / "core/agents").glob("*.md"))
+    avail_skills = sorted(p.parent.name for p in (ROOT / "core/skills").glob("*/SKILL.md"))
+    custom = False
+    if args.agents:
+        prof["agents"], custom = csv(args.agents), True
+    elif interactive and input("\nCustomize agents/skills? [y/N]: ").strip().lower() == "y":
+        prof["agents"] = ask_multi("Agents:", avail_agents, ",".join(str(avail_agents.index(a) + 1) for a in prof["agents"] if a in avail_agents))
+        custom = True
+    if args.skills or (custom and interactive):
+        cur = prof["skills"] + prof.get("external_skills", [])
+        if args.skills:
+            chosen = csv(args.skills)
+        else:
+            opts = avail_skills + [e for e in prof.get("external_skills", []) if e not in avail_skills]
+            chosen = ask_multi("Skills:", opts, ",".join(str(opts.index(c) + 1) for c in cur if c in opts))
+        prof["skills"] = [x for x in chosen if x in avail_skills]
+        prof["external_skills"] = [x for x in chosen if x not in avail_skills]
+        custom = True
+    for a in prof["agents"]:
+        if a not in avail_agents:
+            sys.exit(f"unknown agent '{a}'")
+    for k in prof["skills"]:
+        if k not in avail_skills:
+            sys.exit(f"unknown core skill '{k}'")
+    prof["workflows"] = [w for w in prof["workflows"] if set(parse_md(ROOT / "core/workflows" / f"{w}.md")[0].get("agents", [])) <= set(prof["agents"])]
+
+    args.profile = pname
+    _, agents, skills, wfs, ext = build(args)
+    if interactive:
+        print(f"\nPlan: scope={scope} root={root}\n  targets={','.join(ides)} profile={pname}\n  agents={','.join(agents)}\n  skills={','.join(list(skills) + list(ext))}\n  workflows={','.join(wfs)}")
+        if not args.dry_run and input("Proceed? [Y/n]: ").strip().lower() == "n":
+            sys.exit("aborted")
+    root.mkdir(parents=True, exist_ok=True)
+    o = Out(root, args.dry_run)
+    if scope == "project":
+        o.block("AGENTS.md", index_text(prof, agents, skills, wfs, ext))
     for i in ides:
-        {"cursor": to_cursor, "claude": to_claude, "copilot": to_copilot, "windsurf": to_windsurf}[i](o, prof, agents, skills, wfs, ext)
-    if not args.dry_run:
-        (target / MANIFEST).write_text(json.dumps({"profile": args.profile, "ides": ides, "files": sorted(set(o.files))}, indent=2))
-    print(f"{'[dry-run] ' if args.dry_run else ''}profile={args.profile} ides={','.join(ides)} -> {target}: {len(set(o.files))} files, {len(agents)} agents, {len(skills)+len(ext)} skills, {len(wfs)} workflows")
+        if scope == "user":
+            to_user(i, o, prof, agents, skills, wfs, ext)
+        elif i == "codex":
+            to_codex(o, prof, agents, skills, wfs, ext)
+        else:
+            {"cursor": to_cursor, "claude": to_claude, "copilot": to_copilot, "windsurf": to_windsurf}[i](o, prof, agents, skills, wfs, ext)
+    if args.dry_run:
+        for f in sorted(set(o.files)):
+            print("  would write", f)
+    else:
+        mp.write_text(json.dumps({"profile": pname, "scope": scope, "ides": ides, "custom": custom, "agents": list(agents), "skills": list(skills) + list(ext), "files": sorted(set(o.files))}, indent=2))
+    print(f"{'[dry-run] ' if args.dry_run else ''}scope={scope} profile={pname} targets={','.join(ides)} -> {root}: {len(set(o.files))} files, {len(agents)} agents, {len(skills)+len(ext)} skills, {len(wfs)} workflows")
 
 
 if __name__ == "__main__":

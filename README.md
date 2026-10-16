@@ -8,15 +8,29 @@ Pick a profile (web app, testing, infrastructure-as-code, general) and the insta
 
 ```bash
 git clone https://github.com/nkandagatla/ai-ecosystem && cd ai-ecosystem
-./install.sh --sync --ide cursor,claude --profile web-app --target /path/to/your/project
+./install.sh --sync          # interactive: pick tools, scope, profile, agents/skills
 ```
 
-- `--sync` pulls [ai-cloud-skills](https://github.com/nkandagatla/ai-cloud-skills) into `vendor/` so profiles can include its skills (Terraform, AWS/Azure/GCP, secure coding...).
-- `--ide` accepts `cursor,claude,copilot,windsurf` or `all`. `--profile`: `general`, `web-app`, `testing`, `infrastructure-as-code`.
-- `--dry-run` previews, `--uninstall` removes exactly what was installed (your own content in `AGENTS.md`/`CLAUDE.md` is preserved). `--list` shows profiles.
+The wizard asks for: (1) **targets** (multi-select): `.claude`, `.codex` (AGENTS.md), `.cursor`, `.github` (Copilot), `.windsurf`; (2) **scope**: `project` (current repo, `--dir`) or `user` (global: `~/.claude`, `~/.codex`, `~/.cursor`, `~/.codeium/windsurf`); (3) **profile** (`general`, `web-app`, `testing`, `infrastructure-as-code`) and optional agent/skill selection; then shows a plan and confirms.
+
+Non-interactive / CI equivalents:
+
+```bash
+./install.sh --sync --yes --target claude,codex,cursor --scope project --profile web-app --dir /path/to/repo
+./install.sh --yes --target claude,codex,cursor --scope user --profile iac
+./install.sh --yes --target all --profile testing --agents planner,tester,developer --skills test-strategy,code-fundamentals
+./install.sh --dry-run ...    # preview files
+./install.sh --update --yes   # re-render from the manifest (picks up new versions of core/)
+./install.sh --uninstall --scope project --dir /path/to/repo
+```
+
+- `--sync` pulls [ai-cloud-skills](https://github.com/nkandagatla/ai-cloud-skills) into `vendor/` so profiles can include its skills.
+- Targets: `claude,codex,cursor,copilot` (alias `github`), `windsurf`, or `all`. `--home` overrides `$HOME` for user scope.
+- Uninstall removes exactly what was installed (tracked in `.ai-ecosystem.json`); your own content in `AGENTS.md`/`CLAUDE.md` is preserved via managed blocks.
+- User scope notes: Copilot has no stable file-based global scope (skipped); Cursor gets agents/skills/commands (global rules are UI-only); Windsurf gets global rules + workflows.
 - Requires only `bash`, `python3`, `git`.
 
-Then, for example, in Claude Code run `/vibe-code-web-page landing page for a coffee shop`, or in Cursor ask the `planner` agent to start.
+Then, e.g. in Claude Code run `/vibe-code-web-page landing page for a coffee shop`.
 
 ## Architecture
 
@@ -58,6 +72,7 @@ flowchart LR
 
 | Tool | Agents | Skills | Workflows | Index |
 |---|---|---|---|---|
+| Codex | `.codex/agents` (user) | `.codex/skills` | `.codex/prompts` | `AGENTS.md` |
 | Cursor | `.cursor/agents` | `.cursor/rules/*.mdc` | `.cursor/commands` | always-on rule |
 | Claude Code | `.claude/agents` | `.claude/skills` | `.claude/commands` | `CLAUDE.md` (imports `AGENTS.md`) |
 | Copilot | `.github/agents/*.agent.md` | `.github/instructions` | `.github/prompts` | `copilot-instructions.md` |
@@ -72,6 +87,6 @@ Default: `./scripts/sync-cloud-skills.sh` (shallow clone into gitignored `vendor
 Add `profiles/<name>.json`: `agents`, `skills`, `workflows`, `external_skills`, optional `extends`.
 
 ## Test
-`./tests/test_install.sh` installs every profile into every IDE layout in temp dirs, checks idempotency and clean uninstall.
+`./tests/test_install.sh` installs every profile x target x scope into temp dirs, checks layout, idempotency, update, dry-run, the interactive flow, and clean uninstall.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). MIT licensed.
