@@ -1,0 +1,17 @@
+{
+  "description": "AWS infrastructure as code (Terraform/CDK) with AWS guardrails",
+  "extends": "infrastructure-as-code",
+  "skills": [],
+  "workflows": [],
+  "external_skills": [
+    "aws-foundations",
+    "aws-networking",
+    "aws-kms-secrets",
+    "aws-observability",
+    "aws-cost-optimization",
+    "aws-organizations-governance"
+  ],
+  "mcp": [
+    "aws-docs"
+  ]
+}

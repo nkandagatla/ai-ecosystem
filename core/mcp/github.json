@@ -1,0 +1,2 @@
+{"name": "github", "description": "GitHub MCP server (issues, PRs, code search). Needs GITHUB_PERSONAL_ACCESS_TOKEN in your environment.",
+ "command": "npx", "args": ["-y", "@github/github-mcp-server"], "env": {"GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"}}

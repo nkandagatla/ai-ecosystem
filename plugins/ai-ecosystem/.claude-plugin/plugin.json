@@ -1,0 +1,17 @@
+{
+  "name": "ai-ecosystem",
+  "version": "2.0.0",
+  "description": "SDLC agent team (planner, architect, developer, reviewer, tester, security, devops, docs, release), engineering skills, workflows and a safety guard hook.",
+  "author": {
+    "name": "Nithin Kandagatla"
+  },
+  "homepage": "https://github.com/nkandagatla/ai-ecosystem",
+  "repository": "https://github.com/nkandagatla/ai-ecosystem",
+  "license": "MIT",
+  "keywords": [
+    "sdlc",
+    "agents",
+    "skills",
+    "workflows"
+  ]
+}

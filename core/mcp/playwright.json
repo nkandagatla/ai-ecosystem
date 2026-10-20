@@ -1,0 +1,2 @@
+{"name": "playwright", "description": "Playwright MCP server for browser automation and UI testing.",
+ "command": "npx", "args": ["-y", "@playwright/mcp@latest"]}

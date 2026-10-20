@@ -1,0 +1,13 @@
+{
+  "name": "ai-ecosystem",
+  "version": "2.0.0",
+  "description": "Install SDLC agents, skills and workflows into Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI and Kiro.",
+  "type": "module",
+  "bin": { "ai-ecosystem": "bin/ai-ecosystem.mjs" },
+  "files": ["bin/", "scripts/ai_ecosystem.py", "ai_ecosystem/**/*.py", "core/", "profiles/", "vendor.lock", "install.sh", "README.md", "LICENSE"],
+  "engines": { "node": ">=18" },
+  "repository": { "type": "git", "url": "git+https://github.com/nkandagatla/ai-ecosystem.git" },
+  "keywords": ["ai", "agents", "skills", "claude-code", "codex", "cursor", "copilot", "windsurf", "gemini-cli", "kiro"],
+  "author": "Nithin Kandagatla",
+  "license": "MIT"
+}

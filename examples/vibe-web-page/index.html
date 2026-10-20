@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'">
+  <title>Corner Bean - neighbourhood coffee</title>
+  <style>
+    :root { --bg: #fffaf3; --ink: #2b1d14; --accent: #9c4a1a; }
+    body { margin: 0; font: 1.05rem/1.6 system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+    header, main, footer { max-width: 60rem; margin: auto; padding: 1.5rem; }
+    .cta { display: inline-block; background: var(--accent); color: #fff; padding: .8rem 1.4rem; border-radius: .5rem; text-decoration: none; }
+    .cta:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+    ul.menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; padding: 0; list-style: none; }
+    ul.menu li { background: #fff; padding: 1rem; border-radius: .5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Corner Bean</h1>
+    <p><strong>Open</strong> Mon-Fri 7:00-18:00, Sat-Sun 8:00-16:00 &middot; <a href="https://maps.example.com/corner-bean">12 Elm St</a></p>
+    <a class="cta" href="https://order.example.com/corner-bean">Order online</a>
+  </header>
+  <main>
+    <h2>Menu highlights</h2>
+    <ul class="menu">
+      <li>Flat white <span>$4.20</span></li><li>Cold brew <span>$4.50</span></li><li>Chai latte <span>$4.40</span></li>
+      <li>Almond croissant <span>$3.80</span></li><li>Banana bread <span>$3.50</span></li><li>Avocado toast <span>$8.90</span></li>
+    </ul>
+  </main>
+  <footer><small>&copy; 2026 Corner Bean</small></footer>
+</body>
+</html>

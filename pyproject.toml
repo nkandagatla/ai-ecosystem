@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ai-ecosystem"
+version = "2.0.0"
+description = "Install SDLC agents, skills and workflows into Claude Code, Codex, Cursor, GitHub Copilot, Windsurf, Gemini CLI and Kiro from one source of truth."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [{ name = "Nithin Kandagatla" }]
+keywords = ["ai", "agents", "skills", "claude-code", "codex", "cursor", "copilot", "windsurf", "gemini", "kiro", "sdlc"]
+classifiers = ["Programming Language :: Python :: 3", "Environment :: Console", "Topic :: Software Development"]
+
+[project.urls]
+Homepage = "https://github.com/nkandagatla/ai-ecosystem"
+
+[project.scripts]
+ai-ecosystem = "ai_ecosystem.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ai_ecosystem"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"core" = "ai_ecosystem/_data/core"
+"profiles" = "ai_ecosystem/_data/profiles"
+"vendor.lock" = "ai_ecosystem/_data/vendor.lock"
+
+[tool.hatch.build.targets.sdist]
+include = ["ai_ecosystem", "core", "profiles", "vendor.lock", "README.md", "LICENSE", "CHANGELOG.md"]

@@ -1,0 +1,16 @@
+{
+  "description": "Google Cloud infrastructure as code (Terraform) with GCP guardrails",
+  "extends": "infrastructure-as-code",
+  "skills": [],
+  "workflows": [],
+  "external_skills": [
+    "gcp-foundations",
+    "gcp-networking",
+    "gcp-iam",
+    "gcp-secret-manager-kms",
+    "gcp-observability",
+    "gcp-org-policy-security",
+    "gcp-cost-optimization"
+  ],
+  "mcp": []
+}
