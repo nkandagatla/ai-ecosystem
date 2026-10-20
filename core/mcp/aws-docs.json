@@ -1,0 +1,2 @@
+{"name": "aws-docs", "description": "AWS documentation MCP server (read-only docs search).",
+ "command": "uvx", "args": ["awslabs.aws-documentation-mcp-server@latest"]}

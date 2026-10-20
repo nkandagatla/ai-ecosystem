@@ -1,0 +1,2 @@
+{"name": "terraform", "description": "HashiCorp Terraform MCP server (registry providers/modules docs). Requires Docker.",
+ "command": "docker", "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server"]}
