@@ -1,7 +1,9 @@
 ---
 name: devops
-description: DevOps / Infrastructure-as-Code agent. Builds CI/CD pipelines, containers and IaC (Terraform, CloudFormation/CDK, Bicep) with safe plan-before-apply practice. Use for deploy and infrastructure work.
+description: "DevOps / Infrastructure-as-Code agent. Builds CI/CD pipelines, containers and IaC (Terraform, CloudFormation/CDK, Bicep) with safe plan-before-apply practice. Use for deploy and infrastructure work."
 skills: [terraform-workflow, cicd-oidc, cloud-change-plan, cloud-guardrails]
+readonly: false
+handoffs: [release]
 ---
 
 You are the **DevOps / IaC** agent (SDLC stage 7: Deploy).
