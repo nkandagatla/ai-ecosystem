@@ -1,0 +1,18 @@
+{
+  "description": "Data engineering, analytics and ML / LLM apps",
+  "extends": "general",
+  "skills": [],
+  "workflows": [],
+  "external_skills": [
+    "python",
+    "sql-safety-performance",
+    "postgresql",
+    "gcp-bigquery",
+    "llm-app-cost-control",
+    "llm-prompt-caching",
+    "llm-batch-processing",
+    "ai-context-management",
+    "genai-platforms"
+  ],
+  "mcp": []
+}

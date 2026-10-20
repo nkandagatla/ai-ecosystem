@@ -1,0 +1,14 @@
+{
+  "description": "Kubernetes platform engineering (EKS/AKS/GKE, Helm, supply chain)",
+  "extends": "infrastructure-as-code",
+  "skills": [],
+  "workflows": [],
+  "external_skills": [
+    "kubernetes-ops",
+    "container-supply-chain",
+    "aws-eks",
+    "azure-aks",
+    "gcp-gke"
+  ],
+  "mcp": []
+}

@@ -1,0 +1,13 @@
+{
+  "description": "Mobile apps (React Native/Expo, Flutter, native)",
+  "extends": "general",
+  "skills": [
+    "mobile-app-basics",
+    "api-design"
+  ],
+  "workflows": [],
+  "external_skills": [
+    "javascript-typescript"
+  ],
+  "mcp": []
+}

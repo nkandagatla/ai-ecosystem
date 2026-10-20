@@ -1,0 +1,21 @@
+{
+  "description": "HTTP/REST/event API backends with databases",
+  "extends": "general",
+  "skills": [
+    "api-design"
+  ],
+  "workflows": [],
+  "external_skills": [
+    "nodejs-backend",
+    "python",
+    "java-spring",
+    "go",
+    "db-migrations",
+    "sql-safety-performance",
+    "postgresql",
+    "db-guardrails"
+  ],
+  "mcp": [
+    "github"
+  ]
+}

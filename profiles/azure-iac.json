@@ -1,0 +1,16 @@
+{
+  "description": "Azure infrastructure as code (Terraform/Bicep) with Azure guardrails",
+  "extends": "infrastructure-as-code",
+  "skills": [],
+  "workflows": [],
+  "external_skills": [
+    "azure-foundations",
+    "azure-networking",
+    "azure-key-vault",
+    "azure-monitor",
+    "azure-entra-rbac",
+    "azure-policy-governance",
+    "azure-cost-management"
+  ],
+  "mcp": []
+}
